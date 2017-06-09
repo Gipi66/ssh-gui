@@ -5,8 +5,6 @@ import java.io.OutputStream;
 
 import javax.swing.JTextArea;
 
-import simple_server_manager.Main;
-
 public class CustomOutputStream extends OutputStream {
 
 	private JTextArea textArea;

@@ -22,8 +22,6 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UIKeyboardInteractive;
 import com.jcraft.jsch.UserInfo;
 
-import simple_server_manager.Exec.MyUserInfo;
-
 public class Main {
 	public static Logger log = Logger.getLogger(Main.class.getName());
 

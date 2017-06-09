@@ -1,5 +1,7 @@
 package simple_server_manager;
 
+import javax.swing.JOptionPane;
+
 /* -*-mode:java; c-basic-offset:2; indent-tabs-mode:nil -*- */
 /**
  * This program enables you to connect to sshd server and get the shell prompt.
@@ -10,10 +12,11 @@ package simple_server_manager;
  * be ugly because of lacks of terminal-emulation, but you can issue commands.
  *
  */
-
-import com.jcraft.jsch.*;
-import java.awt.*;
-import javax.swing.*;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.UIKeyboardInteractive;
+import com.jcraft.jsch.UserInfo;
 
 public class SHell {
 	public static void main(String[] arg) {
