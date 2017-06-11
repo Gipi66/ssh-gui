@@ -14,6 +14,7 @@ import javax.swing.JTextField;
 
 import org.eclipse.wb.swing.FocusTraversalOnArray;
 
+@SuppressWarnings("serial")
 public class MainHeader extends JPanel {
 	private JTextField txtCiuaciua;
 	private JPasswordField passwordField;

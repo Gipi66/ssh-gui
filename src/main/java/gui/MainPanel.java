@@ -27,6 +27,7 @@ import simple_server_manager.UserInfoClass;
 import streams.CustomInputStream;
 import streams.CustomOutputStream;
 
+@SuppressWarnings("serial")
 public class MainPanel extends JPanel {
 	JButton btnAddUser = new JButton("New User");
 	JPasswordField passwordField = new JPasswordField();

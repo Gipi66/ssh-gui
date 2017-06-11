@@ -9,6 +9,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+@SuppressWarnings("serial")
 public class ConsoleMain extends JPanel {
 	private JTextField inputField;
 	private JLabel lblNewLabel;
