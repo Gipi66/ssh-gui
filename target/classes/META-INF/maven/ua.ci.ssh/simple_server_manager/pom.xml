@@ -19,7 +19,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>ua.ci.phone_parser.Main</mainClass>
+							<mainClass>gui.MainFrame</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
