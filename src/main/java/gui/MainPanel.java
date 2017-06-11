@@ -1,14 +1,18 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
@@ -29,12 +33,16 @@ import streams.CustomOutputStream;
 
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel {
-	JButton btnAddUser = new JButton("New User");
+	Properties props = null;
+
+	JButton btnAddUser = new JButton("save credentials");
 	JPasswordField passwordField = new JPasswordField();
 	JTextField txtCiuaciua = new JTextField();
 	JPanel panelUsers = new JPanel();
 	JPanel headerPanel = new JPanel();
 	JTabbedPane tabbedPane;
+
+	private ImageIcon iconDelete = null;
 
 	ArrayList<JButton> userButtons = new ArrayList<JButton>();
 
@@ -42,6 +50,8 @@ public class MainPanel extends JPanel {
 	public HashMap<String, String> users = new HashMap<String, String>();
 
 	public MainPanel() {
+		iconDelete = new ImageIcon(getClass().getClassLoader().getResource("round-delete-button.png"));
+
 		setLayout(new BorderLayout(0, 0));
 
 		JPanel header = new JPanel();
@@ -93,8 +103,11 @@ public class MainPanel extends JPanel {
 							JTextArea textPane = console.getOutComponent();
 							channel.setOutputStream(new CustomOutputStream(textPane));
 							channel.connect(3 * 1000);
+							newButton.setBackground(Color.GREEN);
 							// pack();
 
+						} catch (JSchException err) {
+							newButton.setBackground(Color.RED);
 						} catch (Exception err) {
 							err.printStackTrace();
 						}
@@ -102,7 +115,21 @@ public class MainPanel extends JPanel {
 
 					}
 				});
+				JButton removeNewButton = new JButton();
+
+				// removeNewButton.setIcon(defaultIcon);
+				removeNewButton.setIcon(iconDelete);
+				removeNewButton.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseClicked(MouseEvent e) {
+						panelUsers.remove(newButton);
+						panelUsers.remove(removeNewButton);
+						revalidate();
+						repaint();
+					};
+				});
 				panelUsers.add(newButton);
+				panelUsers.add(removeNewButton);
 
 				revalidate();
 				repaint();
@@ -120,6 +147,10 @@ public class MainPanel extends JPanel {
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		body.add(tabbedPane);
 
+	}
+
+	private Properties getProps(String path) {
+		return new Properties();
 	}
 
 	private Session startSession(String user, String host, String password) throws JSchException {

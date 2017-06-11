@@ -66,7 +66,7 @@ public class MainHeader extends JPanel {
 
 		// panelUsers = new JPanel();
 		// panel.add(panelUsers);
-		panelUsers.setLayout(new GridLayout(0, 1, 0, 0));
+		panelUsers.setLayout(new GridLayout(0, 2, 0, 0));
 		add(scrollPane);
 	}
 
