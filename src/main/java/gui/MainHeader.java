@@ -23,15 +23,14 @@ public class MainHeader extends JPanel {
 	private JPanel panel;
 
 	JPanel panelNewUser;
-	private HashMap<String, String> users;
 	private JScrollPane scrollPane;
 	private JScrollPane scrollPane_1;
 
 	/**
 	 * Create the panel.
 	 */
-	public MainHeader(HashMap<String, String> users, JButton btnAddUser, JTextField txtCiuaciua,
-			JPasswordField passwordField, JPanel panelUsers, JPanel panel) {
+	public MainHeader(JButton btnAddUser, JTextField txtCiuaciua, JPasswordField passwordField, JPanel panelUsers,
+			JPanel panel) {
 		this.btnAddUser = btnAddUser;
 		this.passwordField = passwordField;
 		this.txtCiuaciua = txtCiuaciua;
@@ -39,7 +38,6 @@ public class MainHeader extends JPanel {
 		this.panelUsers = panelUsers;
 		this.panel = panel;
 
-		this.users = users;
 		setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
 		// JPanel panel = new JPanel();
@@ -71,8 +69,7 @@ public class MainHeader extends JPanel {
 	}
 
 	public MainHeader() {
-		this(new HashMap<String, String>(), new JButton(), new JTextField(), new JPasswordField(), new JPanel(),
-				new JPanel());
+		this(new JButton(), new JTextField(), new JPasswordField(), new JPanel(), new JPanel());
 
 		setFocusTraversalPolicy(new FocusTraversalOnArray(new Component[] { scrollPane, panel, panelNewUser,
 				txtCiuaciua, passwordField, btnAddUser, panelUsers }));
