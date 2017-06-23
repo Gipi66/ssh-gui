@@ -1,28 +1,32 @@
 package gui;
 
-import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import javax.swing.JButton;
 import java.awt.GridLayout;
+import java.util.ArrayList;
+
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.ActionEvent;
-import javax.swing.JScrollPane;
 
 public class ExtraPanel extends JPanel {
 	private JTextField txtName;
 	private JTextField txtCommand;
-
+	private JPanel panelSnippetList;
 	private JButton btnSave;
+	private JTextField inputField;
+
+	private ArrayList<JButton> commandsList;
 
 	/**
 	 * Create the panel.
 	 */
-	public ExtraPanel() {
+	public ExtraPanel(JButton btnSaveExtraPanel) {
+		this.inputField = inputField;
+		this.btnSave = btnSaveExtraPanel;
+		btnSave.setText("save");
 		setLayout(new BorderLayout(0, 0));
 
 		JPanel panel = new JPanel();
@@ -45,27 +49,35 @@ public class ExtraPanel extends JPanel {
 		txtCommand.setText("command");
 		txtCommand.setColumns(10);
 
-		btnSave = new JButton("save");
-
 		panelNewSnippet.add(btnSave);
 
-		JPanel panelSnippetList = new JPanel();
+		panelSnippetList = new JPanel();
 		panel.add(panelSnippetList);
-		panelSnippetList.setLayout(new BorderLayout(0, 0));
-
-		JButton btnSnippetRemove = new JButton("remove");
-		panelSnippetList.add(btnSnippetRemove, BorderLayout.EAST);
-
-		JButton btnSnippet = new JButton("New button");
-		panelSnippetList.add(btnSnippet, BorderLayout.CENTER);
+		// panelSnippetList.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 
 		JScrollPane scrollPane = new JScrollPane(panelSnippetList);
+		panelSnippetList.setLayout(new GridLayout(0, 2, 0, 0));
 		panel.add(scrollPane);
 
 	}
 
 	public JButton getSaveButton() {
 		return btnSave;
+	}
+
+	public String getSaveName() {
+		return txtName.getText();
+	}
+
+	public String getSaveCommand() {
+		return txtCommand.getText();
+	}
+
+	public void addComponent(JButton btnCommand, JButton btnRemoveCommand) {
+		panelSnippetList.add(btnCommand);
+		panelSnippetList.add(btnRemoveCommand);
+		revalidate();
+		repaint();
 	}
 
 }

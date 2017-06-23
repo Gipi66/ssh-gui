@@ -39,6 +39,7 @@ public class CustomInputStream extends InputStream implements ActionListener {
 		}
 		int ret = (int) s.charAt(pos);
 		pos++;
+		System.out.println("CustomInputStream: read(): " + ret);
 		return ret;
 	}
 
@@ -65,6 +66,7 @@ public class CustomInputStream extends InputStream implements ActionListener {
 			pos += bytes_to_copy;
 			bytes_copied += bytes_to_copy;
 		}
+		System.out.println("CustomInputStream: read(byte[] b, int off, int len): " + bytes_copied);
 		return bytes_copied;
 	}
 
@@ -76,8 +78,12 @@ public class CustomInputStream extends InputStream implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		q.add(field.getText() + "\r\n");
+		q.add(field.getText() + "\n");
 		field.setText("");
+	}
+
+	public void sendCommand(String command) {
+		q.add(command + "\n");
 	}
 
 }

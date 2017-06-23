@@ -31,7 +31,6 @@ public class MainHeader extends JPanel {
 	 */
 	public MainHeader(JButton btnAddUser, JTextField txtCiuaciua, JPasswordField passwordField, JPanel panelUsers,
 			JPanel panel) {
-		this.btnAddUser = btnAddUser;
 		this.passwordField = passwordField;
 		this.txtCiuaciua = txtCiuaciua;
 		txtCiuaciua.setText("@ci.ua");

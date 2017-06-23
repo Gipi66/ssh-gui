@@ -31,6 +31,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
+import buttons.CustomJButton;
 import lib.StringCrypter;
 import simple_server_manager.UserInfoClass;
 import streams.CustomInputStream;
@@ -86,8 +87,10 @@ public class MainPanel extends JPanel {
 				JButton newButton = newButton(credCon);
 				JButton removeNewButton = removeButton(newButton);
 
+				log.info("Добавляю кнопки");
 				panelUsers.add(newButton);
 				panelUsers.add(removeNewButton);
+				log.info("Добавлены кнопки");
 
 				revalidate();
 				repaint();
@@ -131,7 +134,7 @@ public class MainPanel extends JPanel {
 		removeNewButton.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				panelUsers.remove(newButtonarg);
+				removeButtonFromPanel(newButtonarg);
 				CredentialConnection targetCredCon = null;
 				for (CredentialConnection credCon : credConList) {
 					if (credCon.getUserAndHost().equals(newButtonarg.getText())) {
@@ -144,13 +147,17 @@ public class MainPanel extends JPanel {
 						props.remove(key.toString());
 					}
 				}
-				panelUsers.remove(removeNewButton);
+				removeButtonFromPanel(removeNewButton);
 				saveProps();
 				revalidate();
 				repaint();
 			};
 		});
 		return removeNewButton;
+	}
+
+	private void removeButtonFromPanel(JButton btn) {
+		btn.getParent().remove(btn);
 	}
 
 	private JButton newButton(CredentialConnection credCon) {
@@ -170,21 +177,55 @@ public class MainPanel extends JPanel {
 					layeredPane.setLayout(new BoxLayout(layeredPane, BoxLayout.X_AXIS));
 
 					ConsoleMain console = new ConsoleMain();
-					layeredPane.add(console);
+					layeredPane.add(console, BorderLayout.EAST);
 
 					Channel channel = session.openChannel("shell");
 
-					OutputStream outChannel = channel.getOutputStream();
+					// OutputStream outChannel = channel.getOutputStream();
 					// InputStream inChannel = channel.getInputStream();
 					channel.setOutputStream(System.out);
 					// channel.setInputStream(System.in);
 
 					JTextField inputField = console.getInputComponent();
-					channel.setInputStream(new CustomInputStream(inputField));
+
+					CustomInputStream cis = new CustomInputStream(inputField);
+					channel.setInputStream(cis);
 					JTextArea textPane = console.getOutComponent();
+					textPane.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) {
+							inputField.requestFocusInWindow();
+						}
+					});
+
+					JButton btnSaveExtraPanel = new JButton();
+					ExtraPanel extraPanel = new ExtraPanel(btnSaveExtraPanel);
+					log.info("PRE SET");
+
+					layeredPane.add(extraPanel);
 					channel.setOutputStream(new CustomOutputStream(textPane));
 					channel.connect(3 * 1000);
 					newButton.setBackground(Color.GREEN);
+
+					btnSaveExtraPanel.addMouseListener(new MouseAdapter() {
+						@Override
+						public void mouseClicked(MouseEvent e) {
+
+							CustomJButton btnCommand = new CustomJButton(extraPanel.getSaveName(),
+									extraPanel.getSaveCommand());
+							btnCommand.addMouseListener(new MouseAdapter() {
+								@Override
+								public void mouseClicked(MouseEvent e) {
+									log.info("USE COMMAND: " + btnCommand.getCommand());
+									cis.sendCommand(btnCommand.getCommand());
+
+								}
+
+							});
+							JButton btnRemoveCommand = removeButton(btnCommand);
+							extraPanel.addComponent(btnCommand, btnRemoveCommand);
+						}
+					});
 					// pack();
 					props.putAll(credCon.getProps());
 					saveProps();
