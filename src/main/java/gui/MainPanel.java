@@ -25,7 +25,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -40,7 +39,7 @@ import streams.CustomOutputStream;
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel {
 	StringCrypter crypter = new StringCrypter(new byte[] { 1, 4, 5, 6, 8, 9, 7, 8 });
-
+	ArrayList<ShellSession> sessionList;
 	Properties props = openProps();
 
 	final String propsPath = "config.properties";
@@ -62,6 +61,7 @@ public class MainPanel extends JPanel {
 	public HashMap<String, Session> sessions = new HashMap<String, Session>();
 
 	public MainPanel() {
+		sessionList = new ArrayList<ShellSession>();
 
 		iconDelete = new ImageIcon(getClass().getClassLoader().getResource("round-delete-button.png"));
 
@@ -168,9 +168,13 @@ public class MainPanel extends JPanel {
 			public void mouseClicked(MouseEvent e) {
 				System.out.println(newButton.getText());
 
-				Session session = null;
+				ShellSession shellSession = null;
 				try {
-					session = startShellSession(credCon.user, credCon.host, credCon.password);
+					// session = startShellSession(credCon.user, credCon.host,
+					// credCon.password);
+
+					shellSession = new ShellSession(credCon);
+					sessionList.add(shellSession);
 
 					JLayeredPane layeredPane = new JLayeredPane();
 					tabbedPane.addTab(credCon.getUserAndHost(), null, layeredPane, null);
@@ -179,17 +183,12 @@ public class MainPanel extends JPanel {
 					ConsoleMain console = new ConsoleMain();
 					layeredPane.add(console, BorderLayout.EAST);
 
-					Channel channel = session.openChannel("shell");
-
-					// OutputStream outChannel = channel.getOutputStream();
-					// InputStream inChannel = channel.getInputStream();
-					channel.setOutputStream(System.out);
-					// channel.setInputStream(System.in);
+					// Channel channel = session.openChannel("shell");
 
 					JTextField inputField = console.getInputComponent();
 
 					CustomInputStream cis = new CustomInputStream(inputField);
-					channel.setInputStream(cis);
+
 					JTextArea textPane = console.getOutComponent();
 					textPane.addMouseListener(new MouseAdapter() {
 						@Override
@@ -203,8 +202,11 @@ public class MainPanel extends JPanel {
 					log.info("PRE SET");
 
 					layeredPane.add(extraPanel);
-					channel.setOutputStream(new CustomOutputStream(textPane));
-					channel.connect(3 * 1000);
+					CustomOutputStream cos = new CustomOutputStream(textPane);
+					// channel.setOutputStream(cos);
+					shellSession.setStreams(cis, cos);
+					shellSession.connect(3 * 1000);
+
 					newButton.setBackground(Color.GREEN);
 
 					btnSaveExtraPanel.addMouseListener(new MouseAdapter() {
@@ -226,7 +228,6 @@ public class MainPanel extends JPanel {
 							extraPanel.addComponent(btnCommand, btnRemoveCommand);
 						}
 					});
-					// pack();
 					props.putAll(credCon.getProps());
 					saveProps();
 
@@ -339,32 +340,6 @@ public class MainPanel extends JPanel {
 
 	}
 
-	private Session startSession(String user, String host, String password) throws JSchException {
-
-		JSch jsch = new JSch();
-		Session session = jsch.getSession(user, host, 22);
-		session.setPassword(password);
-		// session.connect(30000);
-		UserInfo ui = new UserInfoClass();
-		session.setUserInfo(ui);
-		session.connect();
-
-		return session;
-	}
-
-	private Session startShellSession(String user, String host, String password) throws JSchException {
-
-		JSch jsch = new JSch();
-		Session session = jsch.getSession(user, host, 22);
-		session.setPassword(password);
-
-		UserInfo ui = new UserInfoClass();
-		session.setUserInfo(ui);
-		session.connect(30000);
-
-		return session;
-	}
-
 	public static Logger log = Logger.getLogger(MainPanel.class.getName());
 
 	String newId() {
@@ -383,6 +358,17 @@ public class MainPanel extends JPanel {
 			}
 		}
 		return newId;
+	}
+
+	public void closeConnections() {
+		for (ShellSession shellSessionI : sessionList) {
+			try {
+				shellSessionI.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 
 	class CredentialConnection {
