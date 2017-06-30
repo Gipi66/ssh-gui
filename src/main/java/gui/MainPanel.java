@@ -9,11 +9,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Random;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -42,7 +46,7 @@ public class MainPanel extends JPanel {
 	ArrayList<ShellSession> sessionList;
 	Properties props = openProps();
 
-	final String propsPath = "config.properties";
+	final String propsPath = "config.ini";
 
 	OutputStream output = null;
 	InputStream input = null;
@@ -85,7 +89,7 @@ public class MainPanel extends JPanel {
 				log.info(credCon.user + " " + credCon.password);
 
 				JButton newButton = newButton(credCon);
-				JButton removeNewButton = removeButton(newButton);
+				JButton removeNewButton = removeButton(newButton, false, credCon);
 
 				log.info("Добавляю кнопки");
 				panelUsers.add(newButton);
@@ -117,7 +121,7 @@ public class MainPanel extends JPanel {
 		for (CredentialConnection credCon : credConList) {
 			log.info(credCon.toString());
 			JButton newButton = newButton(credCon);
-			JButton removeNewButton = removeButton(newButton);
+			JButton removeNewButton = removeButton(newButton, false, credCon);
 			panelUsers.add(newButton);
 			panelUsers.add(removeNewButton);
 		}
@@ -125,7 +129,7 @@ public class MainPanel extends JPanel {
 		repaint();
 	}
 
-	private JButton removeButton(JButton newButtonarg) {
+	private JButton removeButton(JButton newButtonarg, boolean isCommand, CredentialConnection credConn) {
 		// String credStr = newButtonarg.ge;
 
 		JButton removeNewButton = new JButton();
@@ -135,16 +139,39 @@ public class MainPanel extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				removeButtonFromPanel(newButtonarg);
-				CredentialConnection targetCredCon = null;
-				for (CredentialConnection credCon : credConList) {
-					if (credCon.getUserAndHost().equals(newButtonarg.getText())) {
-						targetCredCon = credCon;
+
+				if (isCommand) {
+
+					String propsKey = credConn.id + "." + "commands";
+					String oldCommands = props.getProperty(propsKey);
+					ArrayList<String> newCommands = new ArrayList<String>();
+
+					for (String oldCom : oldCommands.split("@next@")) {
+						if (!oldCom.split("@")[0].equals(((CustomJButton) newButtonarg).getText())) {
+							log.info(oldCom.split("@")[0] + "!=" + ((CustomJButton) newButtonarg).getText());
+							if (!oldCom.isEmpty() && oldCom != "") {
+								newCommands.add(oldCom);
+							}
+						}
 					}
-				}
-				if (targetCredCon != null) {
-					credConList.remove(credConList.indexOf(targetCredCon));
-					for (Object key : targetCredCon.getProps().keySet()) {
-						props.remove(key.toString());
+					log.info(String.format(
+							"###########DELETE isComman. propsKey: %s, oldCommands: %s, newCommands: %s, buttonText: %s",
+							propsKey, oldCommands, newCommands, ((CustomJButton) newButtonarg).getText()));
+					if (!newCommands.isEmpty()) {
+						props.setProperty(propsKey, String.join("@next@", newCommands));
+					}
+				} else {
+					CredentialConnection targetCredCon = null;
+					for (CredentialConnection credCon : credConList) {
+						if (credCon.getUserAndHost().equals(newButtonarg.getText())) {
+							targetCredCon = credCon;
+						}
+					}
+					if (targetCredCon != null) {
+						credConList.remove(credConList.indexOf(targetCredCon));
+						for (Object key : targetCredCon.getProps().keySet()) {
+							props.remove(key.toString());
+						}
 					}
 				}
 				removeButtonFromPanel(removeNewButton);
@@ -198,7 +225,7 @@ public class MainPanel extends JPanel {
 					});
 
 					JButton btnSaveExtraPanel = new JButton();
-					ExtraPanel extraPanel = new ExtraPanel(btnSaveExtraPanel);
+					ExtraPanel extraPanel = new ExtraPanel(btnSaveExtraPanel, props);
 					log.info("PRE SET");
 
 					layeredPane.add(extraPanel);
@@ -209,27 +236,26 @@ public class MainPanel extends JPanel {
 
 					newButton.setBackground(Color.GREEN);
 
+					String thisCommand = props.getProperty(credCon.id + ".commands");
+
+					if (thisCommand != null) {
+						for (String commands : thisCommand.split("@next@"))
+							if (commands != null || !commands.isEmpty()) {
+								String[] nameAndCommand = commands.split("@");
+								newBtnCommand(nameAndCommand[0], nameAndCommand[1], extraPanel, credCon, cis);
+							}
+
+					}
 					btnSaveExtraPanel.addMouseListener(new MouseAdapter() {
 						@Override
 						public void mouseClicked(MouseEvent e) {
+							newBtnCommand(extraPanel.getSaveName(), extraPanel.getSaveCommand(), extraPanel, credCon,
+									cis);
 
-							CustomJButton btnCommand = new CustomJButton(extraPanel.getSaveName(),
-									extraPanel.getSaveCommand());
-							btnCommand.addMouseListener(new MouseAdapter() {
-								@Override
-								public void mouseClicked(MouseEvent e) {
-									log.info("USE COMMAND: " + btnCommand.getCommand());
-									cis.sendCommand(btnCommand.getCommand());
-
-								}
-
-							});
-							JButton btnRemoveCommand = removeButton(btnCommand);
-							extraPanel.addComponent(btnCommand, btnRemoveCommand);
 						}
 					});
 					props.putAll(credCon.getProps());
-					saveProps();
+					// saveProps();
 
 				} catch (JSchException err) {
 					newButton.setBackground(Color.RED);
@@ -241,6 +267,31 @@ public class MainPanel extends JPanel {
 			}
 		});
 		return newButton;
+	}
+
+	private void newBtnCommand(String name, String command, ExtraPanel panel, CredentialConnection credCon,
+			CustomInputStream cis) {
+		CustomJButton btnCommand = new CustomJButton(name, command);
+		btnCommand.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				log.info("USE COMMAND: " + btnCommand.getCommand());
+				cis.sendCommand(btnCommand.getCommand());
+
+			}
+
+		});
+		JButton btnRemoveCommand = removeButton(btnCommand, true, credCon);
+		panel.addComponent(btnCommand, btnRemoveCommand);
+		String propsKey;
+
+		String nameAndCommand = String.format("%s@%s@next@", btnCommand.getText(), btnCommand.getCommand());
+		propsKey = credCon.id + ".commands";
+
+		String propsOld = props.getProperty(propsKey);
+
+		props.put(credCon.id + ".commands", propsOld != null ? propsOld + nameAndCommand : nameAndCommand);
+		// saveProps();
 	}
 
 	private void saveProps() {
@@ -317,18 +368,31 @@ public class MainPanel extends JPanel {
 
 		ArrayList<CredentialConnection> credConListChecked = new ArrayList<CredentialConnection>();
 
+		HashSet<Integer> idSet = new HashSet<Integer>();
 		for (Object key : props.keySet()) {
-			String id = key.toString().substring(0, key.toString().indexOf('.'));
-			String field = key.toString().substring(key.toString().indexOf('.') + 1);
-			String value = props.getProperty(key.toString());
-			log.info(id + " " + field + " " + value);
-			CredentialConnection credCon = getCredConById(id);
-			// log.info(credCon.toString());
+			String[] keys = key.toString().split(Pattern.quote("."));
+
+			if (keys.length == 2)
+				idSet.add(Integer.parseInt(keys[0]));
+		}
+		log.info("#####" + idSet.toString());
+
+		for (Integer id : idSet) {
+			String idStr = id.toString();
+
+			CredentialConnection credCon = getCredConById(idStr);
 			if (credCon == null) {
-				credCon = new CredentialConnection(id);
+				credCon = new CredentialConnection(idStr, props);
 				credConList.add(credCon);
+			} else if (credCon != null) {
+				credCon.setProps(props);
 			}
-			credCon.setField(field, value);
+
+			// String field =
+			// key.toString().substring(key.toString().indexOf('.') + 1);
+			// String value = props.getProperty(key.toString());
+			// log.info(id + " " + field + " " + value);
+
 		}
 		for (CredentialConnection credCon : credConList) {
 			if (!credCon.isEmpty()) {
@@ -372,14 +436,17 @@ public class MainPanel extends JPanel {
 	}
 
 	class CredentialConnection {
-		String user = null;
-		String id = null;
-		String password = null;
+		String user;
+		String id;
+		String password;
 
-		String host = null;
+		String host;
 
-		CredentialConnection(String id) {
+		String commands;
+
+		CredentialConnection(String id, Properties props) {
 			this.id = id;
+			setProps(props);
 		}
 
 		CredentialConnection(String login, String password, String id) {
@@ -387,6 +454,37 @@ public class MainPanel extends JPanel {
 			this.host = login.substring(login.indexOf('@') + 1);
 			this.password = password;
 			this.id = id;
+
+			this.commands = "";
+		}
+
+		void setProps(Properties props) {
+			String propertyName;
+			String propertyValue;
+
+			log.info(props.get(id + "11") != null ? "!=0" : "==0");
+
+			Field[] fields = this.getClass().getDeclaredFields();
+			for (Field field : fields) {
+
+				try {
+
+					propertyName = id + "." + field.getName();
+					propertyValue = props.getProperty(propertyName);
+
+					if (propertyValue != null) {
+						field.set(this, propertyValue);
+					}
+					log.info("###FIELD: " + field.getName() + ": " + field.get(this));
+					// field.set(this, value);
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					e.printStackTrace();
+
+				} catch (SecurityException e) {
+					e.printStackTrace();
+				}
+			}
+			log.warning("##################THIS:\n" + this.toString());
 		}
 
 		boolean isEqualID(String id) {
@@ -411,7 +509,7 @@ public class MainPanel extends JPanel {
 			if (user == null || password == null || host == null) {
 				results = true;
 			}
-			// log.info(results ? "Empty" : "NOT EMPTY");
+
 			return results;
 		}
 

@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -18,14 +19,17 @@ public class ExtraPanel extends JPanel {
 	private JButton btnSave;
 	private JTextField inputField;
 
+	private Properties props;
+
 	private ArrayList<JButton> commandsList;
 
 	/**
 	 * Create the panel.
 	 */
-	public ExtraPanel(JButton btnSaveExtraPanel) {
-		this.inputField = inputField;
+	public ExtraPanel(JButton btnSaveExtraPanel, Properties props) {
 		this.btnSave = btnSaveExtraPanel;
+		this.props = props;
+
 		btnSave.setText("save");
 		setLayout(new BorderLayout(0, 0));
 
@@ -59,6 +63,10 @@ public class ExtraPanel extends JPanel {
 		panelSnippetList.setLayout(new GridLayout(0, 2, 0, 0));
 		panel.add(scrollPane);
 
+	}
+
+	private String getProps() {
+		return new String("aa");
 	}
 
 	public JButton getSaveButton() {
